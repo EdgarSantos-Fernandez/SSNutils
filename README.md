@@ -57,7 +57,6 @@ ssn1 <- createSSN(
 
 ```{r, warning=F, message=F}
 col <- brewer.pal(9,'YlGnBu')[6]
-col_points <- brewer.pal(8,'Paired')[c(2,4)]
 
 plot(
   ssn1,
