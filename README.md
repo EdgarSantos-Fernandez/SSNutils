@@ -109,3 +109,8 @@ ggplot(ssn1_df) +
   coord_fixed()+
   theme_bw()
 ```
+
+
+# Bibliography
+Jay M. Ver Hoef, Erin E. Peterson, David Clifford, Rohan Shah (2014). SSN: An R Package for Spatial Statistical Modeling on
+  Stream Networks. Journal of Statistical Software, 56(3), 1-43. URL http://www.jstatsoft.org/v56/i03/.
