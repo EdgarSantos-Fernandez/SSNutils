@@ -1,5 +1,6 @@
-# SSNutils
-Miscellaneous functions for stream networks
+# SSNutils: Miscellaneous functions for stream networks
+
+Generating artificial stream network data
 
 ```{r, warning=F, message=F}
 library('Rcpp')
