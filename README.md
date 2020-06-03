@@ -73,7 +73,7 @@ plot(
 plot(ssn1, PredPointsID = "preds", add = T, col = "#E41A1C")
 ```
 
-![Alt text](https://github.com/EdgarSantos-Fernandez/staircase/blob/master/prob_vs_species.jpg?raw=true "Title")
+![Alt text](https://github.com/EdgarSantos-Fernandez/SSNutils/blob/mastersim_network.png?raw=true "Title")
 Fig: Artificial stream network.
 
 
