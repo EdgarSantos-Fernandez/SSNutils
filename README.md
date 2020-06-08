@@ -482,9 +482,6 @@ ggplot(df_t) + geom_path(aes(X1,X2, group = slot))+
 
 
 
-# Bibliography
-
-
 
 
 
