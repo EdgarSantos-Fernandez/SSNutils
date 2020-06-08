@@ -255,11 +255,16 @@ ggplot(sim.ssn.df) +
 ```
 
 
-![Alt text](https://github.com/EdgarSantos-Fernandez/SSNutils/blob/master/sim_network.png?raw=true "Title")
+![Alt text](https://github.com/EdgarSantos-Fernandez/SSNutils/blob/master/sim_ggplot.png?raw=true "Title")
 Fig: Artificial stream network.
 
 
 
+
+
+
+![Alt text](https://github.com/EdgarSantos-Fernandez/SSNutils/blob/master/sim_ggplot.png?raw=true "Title")
+Fig: Observation and prediction sites in a stream network.
 
 # Bibliography
 Jay M. Ver Hoef, Erin E. Peterson, David Clifford, Rohan Shah (2014). SSN: An R Package for Spatial Statistical Modeling on
