@@ -143,7 +143,7 @@ sim.out <- SimulateOnSSN(
 )
 ```
 
-The below shows the values of the response variable in the observation sites.
+The figure below shows the values of the response variable at the observation sites.
 
 ```{r, warning=F, message=F, cache = TRUE}
 sim.ssn <- sim.out$ssn.object
