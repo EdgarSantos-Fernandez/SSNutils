@@ -23,6 +23,7 @@ library('SSNdesign')
 In this tutorial we generate artificial stream networks/data, fit spatial models, and make predictions using the R packages ```SSN``` and ```SSNdesign``` [@SSN; @SSNdesign].
 
 # Spatial data
+
 ## Simulated stream network and data
 
 ### Creating spatial stream network objects 
