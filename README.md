@@ -263,7 +263,7 @@ Fig: Artificial stream network.
 
 
 
-![Alt text](https://github.com/EdgarSantos-Fernandez/SSNutils/blob/master/sim_ggplot.png?raw=true "Title")
+![Alt text](https://github.com/EdgarSantos-Fernandez/SSNutils/blob/master/temp_ggplot.png?raw=true "Title")
 Fig: Observation and prediction sites in a stream network.
 
 # Bibliography
