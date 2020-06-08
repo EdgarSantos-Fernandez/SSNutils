@@ -490,4 +490,5 @@ ggplot(df_t) + geom_path(aes(X1,X2, group = slot))+
 # Bibliography
 Jay M. Ver Hoef, Erin E. Peterson, David Clifford, Rohan Shah (2014). SSN: An R Package for Spatial Statistical Modeling on
   Stream Networks. Journal of Statistical Software, 56(3), 1-43. URL http://www.jstatsoft.org/v56/i03/.
+
 Alan Pearse,James McGree, Nicholas Som, Jay Ver Hoef, and Erin Peterson. 2020. SSNdesign: An R Package for Optimal and Adaptive Sampling Designs on Stream Networks.
