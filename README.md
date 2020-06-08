@@ -1,5 +1,8 @@
 # SSNutils: Miscellaneous functions for stream networks
 
+![Alt text](https://github.com/EdgarSantos-Fernandez/SSNutils/blob/master/temp_ggplot.png?raw=true "Title")
+Fig: Observation and prediction sites in a stream network.
+
 Generating artificial stream network data
 
 ```{r, warning=F, message=F}
@@ -260,11 +263,230 @@ Fig: Artificial stream network.
 
 
 
+## Using an existing stream network topology to simulate data.
+We use a stream network dataset with temperature measurements from the
+Middle Fork in the Salmon River, Idaho, USA.
+The full dataset can be found at https://www.fs.fed.us/rm/boise/AWAE/projects/SSN_STARS/software_data.html
+
+
+```{r, warning=F, message=F, cache = TRUE}
+paths <- "MedSpacetime.ssn"
+t  <- importSSN(paths,
+                o.write = TRUE)
+```
+
+The dataset is composed of 400 observations from 80 unique locations.
+
+```{r, warning=F, message=F, cache = TRUE, fig.height = 5, fig.width = 5}
+plot(
+  t,
+  lwdLineCol = "afvArea",
+  lwdLineEx = 10,
+  lineCol = col,
+  pch = 16,
+  xlab = "x-coordinate (m)",
+  ylab = "y-coordinate (m)",
+  asp = 1
+)
+```
+
+We will generate new observation and prediction locations over the existing river network. We overwrite the existing data points using a binomial design with 100 observations and 50 prediction points.
+
+This takes a few mins:
+```{r, warning=F, message=F, cache = TRUE, fig.height = 5, fig.width = 5}
+t2 <- generateSites(t, 
+                    obsDesign = binomialDesign(100),
+                    predDesign = binomialDesign(50),
+                    o.write = TRUE) 
+```
+
+```{r, warning=F, message=F, cache = TRUE, fig.height = 5, fig.width = 5}
+plot(
+  t2,
+  lwdLineCol = "afvArea",
+  lwdLineEx = 8,
+  lineCol = col,
+  col = 1,
+  pch = 16,
+  xlab = "x-coordinate",
+  ylab = "y-coordinate"
+)
+
+plot(t2, PredPointsID = "preds", add = T, pch = 15, col = "#E41A1C")
+```
+
+Simulating data on the SSN object:
+
+```{r, warning=F, message=F, cache = TRUE}
+createDistMat(t2, "preds", o.write=TRUE, amongpred = TRUE)
+
+t3 <- additive.function(t2, "h2oAreaKm2", "computed.afv")
+
+raw_t_obs <- getSSNdata.frame(t3, "Obs")
+raw_t_pred <- getSSNdata.frame(t3, "preds")
+
+# generating continous covariates
+raw_t_obs[,"X1"] <- rnorm(length(raw_t_obs[,1]))
+raw_t_pred[,"X1"] <- rnorm(length(raw_t_pred[,1]))
+raw_t_obs[,"X2"] <- rnorm(length(raw_t_obs[,1]))
+raw_t_pred[,"X2"] <- rnorm(length(raw_t_pred[,1]))
+
+# generating categorical covariates
+raw_t_obs[,"F1"] <- as.factor(sample.int(4,length(raw_t_obs[,1]),replace = TRUE))
+raw_t_pred[,"F1"] <- as.factor(sample.int(4,length(raw_t_pred[,1]),replace = TRUE))
+
+# random effects
+raw_t_obs[,"RE1"] <- as.factor(sample(1:3,length(raw_t_obs[,1]),replace = TRUE))
+raw_t_obs[,"RE2"] <- as.factor(sample(1:4,length(raw_t_obs[,1]),replace = TRUE))
+raw_t_pred[,"RE1"] <- as.factor(sample(1:3,length(raw_t_pred[,1]),replace = TRUE))
+raw_t_pred[,"RE2"] <- as.factor(sample(1:4,length(raw_t_pred[,1]),replace = TRUE))
+
+```
+
+```{r, warning=F, message=F, cache = TRUE}
+t3 <- putSSNdata.frame(raw_t_obs,t3, Name = 'Obs')
+t3 <- putSSNdata.frame(raw_t_pred,t3, Name = 'preds')
+head(t3@data)
+head(getSSNdata.frame(t3)[, c("computed.afv")])
+```
+
+
+Simulated values at the locations:
+```{r, warning=F, message=F, cache = TRUE, fig.height = 5.5, fig.width = 5.5}
+set.seed(2020)
+# simulated values will be added in the column "Sim_Values"
+sim_t <- SimulateOnSSN(
+  t3,
+  ObsSimDF = raw_t_obs,
+  PredSimDF = raw_t_pred,
+  PredID = "preds",
+  formula = ~ X1 + X2 + F1,
+  coefficients = c(10, 1, 0, -2, 0, 2),
+  CorModels = c(
+    "LinearSill.tailup",
+    "RE1", 
+    "RE2"),
+  use.nugget = TRUE,
+  CorParms = c(3, 10,  1, .5, .1),#partial sill, range, random effects variance components ordered alphanumerically and nugget #only tail up  2, 10, 1, 5,
+  addfunccol = "computed.afv"
+)
+
+sim.ssn <- sim_t$ssn.object
+
+
+plot(
+  sim.ssn,"Sim_Values",
+  lwdLineCol = "afvArea",
+  lwdLineEx = 8,
+  lineCol = col,
+  pch = 16,
+  xlab = "x-coordinate",
+  ylab = "y-coordinate",
+  asp = 1
+)
+```
+
+
+Using the network model to obtain predictions: 
+```{r, warning=F, message=F, cache = TRUE}
+simDFobs <- getSSNdata.frame(sim.ssn, "Obs")
+simDFpred <- getSSNdata.frame(sim.ssn, "preds")
+
+# saving the simulated values in the prediction points
+simpreds <- simDFpred[,"Sim_Values"]
+# setting the prediction points to NA
+simDFpred[,"Sim_Values"] <- NA 
+sim.ssn <- putSSNdata.frame(simDFpred, sim.ssn, "preds")
+```
+
+
+```{r, warning=F, message=F, cache = TRUE, fig.height = 5, fig.width = 5}
+glmssn.out <- glmssn(Sim_Values ~ X1 + X2 + F1, 
+                     sim.ssn,
+                     CorModels = c("LinearSill.tailup", "RE1", "RE2"), 
+                     addfunccol = "computed.afv")
+
+summary(glmssn.out)
+
+glmssn.pred <- predict(glmssn.out, "preds")
+predDF <- getSSNdata.frame(glmssn.pred, "preds")
+
+```
+
+How well the prediction sites are recovered using the model?
+```{r, warning=F, message=F, cache = TRUE, fig.height = 4, fig.width = 4}
+ggplot() +
+  geom_point(aes(x = simpreds,
+                 y = predDF[, "Sim_Values"])) +
+                 xlab("True") +
+                 ylab("Predicted") +
+                 coord_fixed() +  
+                 theme_bw()
+```
+
+Plotting the observation and prediction points using ggplot:
+
+```{r, warning=F, message=F, cache = TRUE, fig.height = 7, fig.width = 7}
+sim.ssn.df <- collapse(sim.ssn)
+
+obs_data <- getSSNdata.frame(sim.ssn, "Obs")
+pred_data <- getSSNdata.frame(sim.ssn, "preds")
+pred_data$Sim_Values <- simpreds
+
+obs_data_coord <- data.frame(sim.ssn@obspoints@SSNPoints[[1]]@point.coords)
+obs_data_coord$locID <- factor(1:nrow(obs_data_coord))
+pred_data_coord <- data.frame(sim.ssn@predpoints@SSNPoints[[1]]@point.coords)
+pred_data_coord$locID <- factor((nrow(obs_data_coord)+1):(nrow(obs_data_coord)+nrow(pred_data_coord)))
+
+obs_data <- obs_data %>% left_join(obs_data_coord, by = c('locID'))
+obs_data$point <- 'Obs'
+pred_data <- pred_data %>% left_join(pred_data_coord, by = c('locID'))
+pred_data$point <- 'Pred'
+obs_pred_points <- rbind(obs_data, pred_data)
+
+sim.ssn.df$addfunccol_cat <- cut(sim.ssn.df$computed.afv, 
+                                 breaks = seq(min(sim.ssn.df$computed.afv),
+                                              max(sim.ssn.df$computed.afv),
+                                              length.out=6),
+                                 labels = 1:5,
+                                 include.lowest = T)
+
+ggplot(sim.ssn.df) + 
+  geom_path(aes(X1,X2, group = slot, size = addfunccol_cat), lineend = 'round', linejoin = 'round', col = col)+ 
+  geom_point(data = obs_pred_points, aes(x = coords.x1, y = coords.x2, col = Sim_Values, shape = point))+
+  scale_size_manual(values = seq(0.2,2,length.out = 5))+
+  scale_color_viridis(option = 'C')+
+  scale_shape_manual(values = c(16,15))+
+  xlab("x-coordinate") +
+  ylab("y-coordinate")+
+  coord_fixed()+
+  theme_bw()
+
+```
+
+
+# Spatio-temporal stream network data [It will be added soon]
+
+```{r, warning=F, message=F, cache = TRUE}
+df_t <- collapse(t)
+t_data <- t@obspoints@SSNPoints[[1]]@point.data
+t_data$date <- as.Date(t_data$date_)
+
+ggplot(df_t) + geom_path(aes(X1,X2, group = slot))+
+  geom_point(data = t_data, aes(x = NEAR_X, y = NEAR_Y, col = Daily_mn))+
+  facet_wrap(~date)+
+  scale_color_viridis()+
+  coord_fixed()+
+  theme_bw()
+```
 
 
 
-![Alt text](https://github.com/EdgarSantos-Fernandez/SSNutils/blob/master/temp_ggplot.png?raw=true "Title")
-Fig: Observation and prediction sites in a stream network.
+# Bibliography
+
+
+
+
 
 # Bibliography
 Jay M. Ver Hoef, Erin E. Peterson, David Clifford, Rohan Shah (2014). SSN: An R Package for Spatial Statistical Modeling on
