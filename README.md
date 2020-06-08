@@ -1,4 +1,5 @@
 # SSNutils: Miscellaneous functions for stream networks
+## Generating artificial stream network data
 
 ![Alt text](https://github.com/EdgarSantos-Fernandez/SSNutils/blob/master/temp_ggplot.png?raw=true "Title")
 Fig: Observation and prediction sites in a stream network.
